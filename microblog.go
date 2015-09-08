@@ -144,7 +144,6 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 		Header: &view.HeaderStruct{Title: "All posts"},
 		//Posts:  posts,
 	}
-	//renderTemplate(w, "index", bundle)
 	view.Render(w, "index", bundle)
 }
 
