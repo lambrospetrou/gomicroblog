@@ -3,55 +3,14 @@ package main
 import (
 	"fmt"
 	//"github.com/lambrospetrou/gomicroblog/auth"
-	//"html/template"
+	"github.com/lambrospetrou/gomicroblog/view"
 	"net/http"
 	"regexp"
 	"runtime"
+	"time"
 )
 
-type FooterStruct struct {
-	Year int
-}
-
-type HeaderStruct struct {
-	Title string
-}
-
-/*
-type TemplateBundle struct {
-	Post   *BPost
-	Footer *FooterStruct
-	Header *HeaderStruct
-}
-
-type TemplateBundleIndex struct {
-	Posts  []*BPost
-	Footer *FooterStruct
-	Header *HeaderStruct
-}
-*/
 var validPath = regexp.MustCompile("^/blog/(view|edit|save|del)/([a-zA-Z0-9_-]+)$")
-
-/*
-var templates = template.Must(template.ParseFiles(
-	"templates/partials/header.html",
-	"templates/partials/footer.html",
-	"templates/view.html",
-	"templates/edit.html",
-	"templates/add.html",
-	"templates/index.html"))
-
-var BLOG_PREFIX = "/blog"
-
-
-func renderTemplate(w http.ResponseWriter, tmpl string, o interface{}) {
-	// now we can call the correct template by the basename filename
-	err := templates.ExecuteTemplate(w, tmpl+".html", o)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-*/
 
 // BLOG HANDLERS
 func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
@@ -168,23 +127,26 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	http.Error(w, "Not supported method", http.StatusMethodNotAllowed)
 }
+*/
 
 // show all posts
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	//fmt.Fprintf(w, "Hi there, I love you %s\n", r.URL.Path)
-	posts, err := LoadAllBlogPosts()
-	if err != nil {
-		http.Error(w, "Could not load blog posts", http.StatusInternalServerError)
-		return
+	fmt.Fprintf(w, "Hi there, I love you %s\n", r.URL.Path)
+	/*
+		posts, err := LoadAllBlogPosts()
+		if err != nil {
+			http.Error(w, "Could not load blog posts", http.StatusInternalServerError)
+			return
+		}
+	*/
+	bundle := &view.TemplateBundleIndex{
+		Footer: &view.FooterStruct{Year: time.Now().Year()},
+		Header: &view.HeaderStruct{Title: "All posts"},
+		//Posts:  posts,
 	}
-	bundle := &TemplateBundleIndex{
-		Footer: &FooterStruct{Year: time.Now().Year()},
-		Header: &HeaderStruct{Title: "All posts"},
-		Posts:  posts,
-	}
-	renderTemplate(w, "index", bundle)
+	//renderTemplate(w, "index", bundle)
+	view.Render(w, "index", bundle)
 }
-*/
 
 func main() {
 	fmt.Println("Go Microblog service started!")
@@ -201,8 +163,9 @@ func main() {
 
 		http.HandleFunc("/view/", makeHandler(viewHandler))
 		http.HandleFunc("/all", rootHandler)
-		http.HandleFunc("/", rootHandler)
 	*/
+	http.HandleFunc("/", rootHandler)
+
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/s/", http.StripPrefix("/s/", fs))
 
