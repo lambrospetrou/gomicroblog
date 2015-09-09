@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+type id_t uint64
+
 type BPost struct {
 	Id                 int           `json:"id"`
 	Title              string        `json:"title"`
