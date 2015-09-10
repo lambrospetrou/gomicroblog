@@ -6,10 +6,8 @@ import (
 	"time"
 )
 
-type id_t string
-
 type BPost struct {
-	Id                 id_t          `json:"id"`
+	Id                 string        `json:"id"`
 	Title              string        `json:"title"`
 	Author             string        `json:"author"`
 	DateCreated        time.Time     `json:"date_created"`
@@ -39,7 +37,7 @@ func (a ByDate) Less(i, j int) bool {
 
 func (p *BPost) IdStr() string {
 	//return strconv.Itoa(p.Id)
-	return string(p.Id)
+	return p.Id
 }
 
 func (p *BPost) FormattedEditedTime() string {
@@ -62,7 +60,7 @@ func (p *BPost) PrepareSave() {
 
 	// set the ID the same as the URL friendly link and it will be updated
 	// by the storager used if necessary
-	p.Id = id_t(p.UrlFriendlyLink)
+	p.Id = p.UrlFriendlyLink
 }
 
 // New creates a new blog post returns it empty setting its creation date to time.Noe
