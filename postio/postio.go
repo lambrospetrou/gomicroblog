@@ -1,8 +1,9 @@
-package post
+package postio
 
 import (
 	"encoding/json"
 	"errors"
+	"github.com/lambrospetrou/gomicroblog/post"
 	"github.com/lambrospetrou/gomicroblog/storage"
 	"log"
 	"time"
