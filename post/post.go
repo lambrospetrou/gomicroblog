@@ -6,15 +6,16 @@ import (
 	"github.com/lambrospetrou/lpgoblog/lpdb"
 	"github.com/russross/blackfriday"
 	"html/template"
+	"log"
 	"sort"
 	"strconv"
 	"time"
 )
 
-type id_t uint64
+type id_t string
 
 type BPost struct {
-	Id                 int           `json:"id"`
+	Id                 id_t          `json:"id"`
 	Title              string        `json:"title"`
 	Author             string        `json:"author"`
 	DateCreated        time.Time     `json:"date_created"`
@@ -43,7 +44,8 @@ func (a ByDate) Less(i, j int) bool {
 }
 
 func (p *BPost) IdStr() string {
-	return strconv.Itoa(p.Id)
+	//return strconv.Itoa(p.Id)
+	return p.Id
 }
 
 func (p *BPost) FormattedEditedTime() string {
@@ -58,81 +60,87 @@ func (p *BPost) HTML5CreatedTime() string {
 	return p.DateCreated.Format("2006-01-02")
 }
 
-func (p *BPost) Save() error {
+func (p *BPost) PrepareSave() error {
 	// update the HTML content
 	p.DateEditedMarkdown = time.Now()
 	p.ContentHtml = string(blackfriday.MarkdownCommon([]byte(p.ContentMarkdown)))
 	p.DateCompiledHtml = p.DateEditedMarkdown
 
-	// store into the database
-	db, err := lpdb.CDBInstance()
-	if err != nil {
-		return errors.New("Could not get instance of Couchbase")
-	}
-	jsonBytes, err := json.Marshal(p)
-	if err != nil {
-		return errors.New("Could not convert post to JSON format!")
-	}
-	return db.SetRaw("bp::"+p.IdStr(), 0, jsonBytes)
+	// set the ID the same as the URL friendly link and it will be updated
+	// by the storager used if necessary
+	p.Id = p.UrlFriendlyLink
 }
 
-func (p *BPost) Del() error {
-	// store into the database
-	db, err := lpdb.CDBInstance()
-	if err != nil {
-		return errors.New("Could not get instance of Couchbase")
-	}
-	return db.Delete("bp::" + p.IdStr())
+//////////////////////////////////////////
+//////////////////////////////////////////
+
+func Store(store *Storager, p *BPost) error {
+	// make the blog ready for store
+	p.PrepareSave()
+
+	// TODO - get a unique incremental ID if necessary
+	post_id := store.Store(p)
 }
 
-/////////////////////////////////////////////////////
-////////////////// GENERAL FUNCTIONS
-/////////////////////////////////////////////////////
+func Delete(store *Storager, p *BPost) error {
+	// store into the storage used
+	store.Delete(p.IdStr())
+}
 
-func LoadAllBlogPosts() ([]*BPost, error) {
-	db, err := lpdb.CDBInstance()
-	if err != nil {
-		return nil, errors.New("Could not get instance of Couchbase")
-	}
-	var count int
-	err = db.Get("bp::count", &count)
-	if err != nil {
-		return nil, errors.New("Could not get number of blog posts!")
-	}
-	// allocate space for all the posts (start from 1 and inclusive count)
-	keys := make([]string, count+1)
-	for i := 1; i <= count; i++ {
-		keys[i] = "bp::" + strconv.Itoa(i)
-	}
-	postsMap, err := db.GetBulk(keys)
-	if err != nil {
-		return nil, errors.New("Could not get blog posts!")
-	}
-	var posts []*BPost = make([]*BPost, count)
-	count = 0
-	for _, v := range postsMap {
-		bp := &BPost{}
-		err = json.Unmarshal(v.Body, bp)
-		if err == nil {
-			posts[count] = bp
-			count++
+func LoadAll(store *Storager) ([]*BPost, error) {
+	return store.LoadAll()
+	/*
+		db, err := lpdb.CDBInstance()
+		if err != nil {
+			return nil, errors.New("Could not get instance of Couchbase")
 		}
-	}
-	// we take only a part of the slice since there might were deleted posts
-	// and their id returned nothing with the bulk get.
-	posts = posts[:count]
-	sort.Sort(ByDate(posts))
-	return posts, nil
+		var count int
+		err = db.Get("bp::count", &count)
+		if err != nil {
+			return nil, errors.New("Could not get number of blog posts!")
+		}
+		// allocate space for all the posts (start from 1 and inclusive count)
+		keys := make([]string, count+1)
+		for i := 1; i <= count; i++ {
+			keys[i] = "bp::" + strconv.Itoa(i)
+		}
+		postsMap, err := db.GetBulk(keys)
+		if err != nil {
+			return nil, errors.New("Could not get blog posts!")
+		}
+		var posts []*BPost = make([]*BPost, count)
+		count = 0
+		for _, v := range postsMap {
+			bp := &BPost{}
+			err = json.Unmarshal(v.Body, bp)
+			if err == nil {
+				posts[count] = bp
+				count++
+			}
+		}
+		// we take only a part of the slice since there might were deleted posts
+		// and their id returned nothing with the bulk get.
+		posts = posts[:count]
+		sort.Sort(ByDate(posts))
+		return posts, nil
+	*/
 }
 
-func LoadBlogPost(id int) (*BPost, error) {
-	p := &BPost{}
-	db, err := lpdb.CDBInstance()
-	if err != nil {
-		return nil, errors.New("Could not get instance of Couchbase")
+func Load(store *Storager, id id_t) (*BPost, error) {
+	if bp, err := store.LoadAll(); err != nil {
+		e := errors.New("post::Load::Could not load post[" + err + "]")
+		log.Println(e.Error())
+		return nil, e
 	}
-	err = db.Get("bp::"+strconv.Itoa(id), &p)
-	return p, err
+	/*
+		p := &BPost{}
+		db, err := lpdb.CDBInstance()
+		if err != nil {
+			return nil, errors.New("Could not get instance of Couchbase")
+		}
+		err = db.Get("bp::"+strconv.Itoa(id), &p)
+		return p, err
+	*/
 }
 
 // Creates a new blog post with auto-incremented key and returns it empty
