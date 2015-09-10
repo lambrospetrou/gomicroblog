@@ -143,6 +143,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 		Footer: &view.FooterStruct{Year: time.Now().Year()},
 		Header: &view.HeaderStruct{Title: "All posts"},
 		//Posts:  posts,
+		Posts: nil,
 	}
 	view.Render(w, "index", bundle)
 }

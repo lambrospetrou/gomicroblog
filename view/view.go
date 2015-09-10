@@ -1,6 +1,7 @@
 package view
 
 import (
+	"github.com/lambrospetrou/gomicroblog/post"
 	"html/template"
 	"net/http"
 )
@@ -23,13 +24,13 @@ type HeaderStruct struct {
 }
 
 type TemplateBundle struct {
-	//Post   *BPost
+	Post   *post.BPost
 	Footer *FooterStruct
 	Header *HeaderStruct
 }
 
 type TemplateBundleIndex struct {
-	//Posts  []*BPost
+	Posts  []*post.BPost
 	Footer *FooterStruct
 	Header *HeaderStruct
 }

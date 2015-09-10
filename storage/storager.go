@@ -1,4 +1,4 @@
-package post
+package storage
 
 // Storager defines the interface required by each storage method
 // for the blog posts to allow either file-based or other db-based
