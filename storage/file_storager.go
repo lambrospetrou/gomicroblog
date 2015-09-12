@@ -43,8 +43,15 @@ func (fs *FileStorager) Delete(id string) error {
 	return nil
 }
 
-func (fs *FileStorager) LoadAll() []post.BPost {
-	return make([]post.BPost, 10)
+func (fs *FileStorager) LoadAll() ([]post.BPost, error) {
+	if files, err := ioutil.ReadDir(fs.data_dir); err != nil {
+		return nil, errors.New("Could not load blog posts")
+	}
+	posts := make([]post.BPost, len(files))
+	for _, f := range files {
+		posts = append(posts, post.FromJson(ioutil.ReadFile(fs.data_dir+"/"+f.Name())))
+	}
+	return posts
 }
 
 func postFileName(fs *FileStorager, id string) string {
