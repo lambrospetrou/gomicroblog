@@ -8,9 +8,13 @@ import (
 // for the blog posts to allow either file-based or other db-based
 // solution to be used without changing the code a lot.
 type Storager interface {
-	Store(p *BPost) (id_t, error)
-	Load(id id_t) (*BPost, error)
-	Delete(id id_t) error
+	// Returns the id as string or an error
+	Store(p *post.BPost) (string, error)
+	// Returns the loaded blog post or an error
+	Load(id string) (*post.BPost, error)
+	// Deletes the post with given id and returns an error or nil
+	Delete(id string) error
 
-	LoadAll() []BPost
+	// Returns a slice with all the blog posts
+	LoadAll() []post.BPost
 }
