@@ -1,6 +1,7 @@
 package post
 
 import (
+	"encoding/json"
 	"github.com/russross/blackfriday"
 	"html/template"
 	"time"
@@ -66,4 +67,12 @@ func (p *BPost) PrepareSave() {
 // New creates a new blog post returns it empty setting its creation date to time.Noe
 func New() *BPost {
 	return &BPost{DateCreated: time.Now()}
+}
+
+func FromJson(b []byte) *BPost {
+	bp := &BPost{}
+	if err := json.Unmarshal(b, bp); err != nil {
+		return nil
+	}
+	return bp
 }
