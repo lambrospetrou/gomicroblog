@@ -23,3 +23,9 @@ For the moment, we will only create posts using the online form but the goal is 
 ### Off-line creation - manual file editing
 
 I have to find a way to easily edit the files and make them available to the blog.
+
+#### Idea 1
+
+* Have a folder that will contain all the un-posted/pending/in-progress posts.
+* Once a post is done I should either move it manually into the _posts directory or call a function of the server to update the blog posts.
+* Still not sure if I want a static blog or a go-powered one
