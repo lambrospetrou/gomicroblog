@@ -30,10 +30,13 @@ In order to generate the website we run the *site generator* which reads from th
 
 ### *_sites* directory
 
+The generated output directory has the following structure.
+
 **_sites**
-- *articles/* 
-- *styles/*
-- *libs/*
+- *articles/:article-url/:post-data:* 
+- *s/* contains static files to be imported
+	* _css/_ the css files
+	* _libs/_ any javascript libraries
 - *index.html* the home index of the website (contains all the blog articles titles and dates, links to CV and bio/work)
 
 
