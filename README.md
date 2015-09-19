@@ -1,4 +1,4 @@
-# gomicroblog
+# MicroBlog
 Micro blog service powered by Go - blog.lambrospetrou.com will be based on this!
 
 ## Work-flow
@@ -25,6 +25,18 @@ As you can see the directory of the post contains all the information that makeu
 The post directory will exist in **only one** of the three post stages described above depending on the post status (*draft*, *pending*, *published*).
 
 ## Site generation
+
+In order to generate the website we run the *site generator* which reads from the *published* folder all the articles and based on the html templates located in the directory *templates* creates the static website and puts everything in the directory *_site*.
+
+### *_sites* directory
+
+**_sites**
+- *articles/* 
+- *styles/*
+- *libs/*
+- *index.html* the home index of the website (contains all the blog articles titles and dates, links to CV and bio/work)
+
+
 
 
 
