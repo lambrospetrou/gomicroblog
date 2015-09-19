@@ -1,12 +1,12 @@
 # MicroBlog
 Micro blog service powered by Go - blog.lambrospetrou.com will be based on this!
 
-## Work-flow
+## Directory structure
 
 The blog will have three folders related to blog articles as follows:
-1. *published* contains all the articles ready for publishing
-2. *pending* contains all the finished articles that are yet to be moved to *published* folder
-3. *drafts* contains all unfinished articles that are in progress and should not be published when the generator creates the website
+1. *_published* contains all the articles ready for publishing
+2. *_pending* contains all the finished articles that are yet to be moved to *published* folder
+3. *_drafts* contains all unfinished articles that are in progress and should not be published when the generator creates the website
 
 ### Blog Article
 
@@ -16,8 +16,7 @@ For example, assuming a blog post with URL firendly name *how-to-make-a-blog* we
 
 Folder name: *how-to-make-a-blog*
 And inside that folder we have:
-- imgs/
-- files/
+- data/
 - how-to-make-a-blog.md
 
 As you can see the directory of the post contains all the information that makeup that article, including all images, files referenced and the markup code for the article text.
