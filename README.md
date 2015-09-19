@@ -1,6 +1,18 @@
 # gomicroblog
 Micro blog service powered by Go - blog.lambrospetrou.com will be based on this!
 
+## Work-flow
+
+The blog will have three folders related to blog articles as follows:
+1. *published* contains all the articles ready for publishing
+2. *pending* contains all the finished articles that are yet to be moved to *published* folder
+3. *drafts* contains all unfinished articles that are in progress and should not be published when the generator creates the website
+
+### Blog Article
+
+Each post article has its own directory/folder and inside that folder reside all images, files and markdown code for the article.
+
+
 ## Architecture
 
 This section describes the architecture of the micro-blog service.
