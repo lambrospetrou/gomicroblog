@@ -38,6 +38,10 @@ The generated output directory has the following structure.
 	* _libs/_ any javascript libraries
 - *index.html* the home index of the website (contains all the blog articles titles and dates, links to CV and bio/work)
 
+## Configuration
+
+Configuration and user-custom variables will be added in a later version of the site generator.
+
 
 
 
