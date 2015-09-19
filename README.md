@@ -23,6 +23,7 @@ For the moment, we will only create posts using the online form but the goal is 
 ### Off-line creation - manual file editing
 
 I have to find a way to easily edit the files and make them available to the blog.
+This will be done by creating the post directory in the *pending* posts directory and then calling the proper API call on the server (through an admin dashboard) to update the static website with the new post.
 
 #### Idea 1
 
