@@ -5,6 +5,7 @@ import (
 	"github.com/lambrospetrou/gomicroblog/auth"
 	"github.com/lambrospetrou/gomicroblog/gen"
 	"github.com/lambrospetrou/gomicroblog/view"
+	"log"
 	"net/http"
 	"regexp"
 	"runtime"
@@ -57,6 +58,6 @@ func main() {
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/s/", http.StripPrefix("/s/", fs))
 
-	http.ListenAndServe(":40080", nil)
+	log.Fatal(http.ListenAndServe(":40080", nil))
 
 }
