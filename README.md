@@ -1,9 +1,9 @@
 # MicroBlog
 Micro blog service powered by Go - blog.lambrospetrou.com will be based on this!
 
-I will follow the [Jekyll](http://jekyllrb.com/ "Jekyll static site generator") structure since it is a very well accepted and used format and it is directly used in Github pages. So I will slowly create a Go Jerkyll static site generator. 
+I will follow the [Jekyll](http://jekyllrb.com/ "Jekyll static site generator") structure since it is a very well accepted and used format and it is directly used in Github pages. So I will slowly create a Go Jerkyll static site generator (future work in progress). 
 
-With the exception that I will use *Go* [templates](http://golang.org/pkg/text/template/ "Golang templates").
+I will use *Go* [templates](http://golang.org/pkg/text/template/ "Golang templates"). Initially will be used just for my blog but I will add functionality slowly step by step.
 
 ## Directory structure
 
