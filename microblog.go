@@ -8,12 +8,15 @@ import (
 	"github.com/lambrospetrou/gomicroblog/view"
 	"log"
 	"net/http"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"time"
 )
 
 var validPath = regexp.MustCompile("^/blog/(view|edit|save|del)/([a-zA-Z0-9_-]+)$")
+
+var ViewBuilder *view.Builder = nil
 
 // BLOG HANDLERS
 func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
@@ -43,7 +46,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 		//Posts:  posts,
 		Posts: nil,
 	}
-	view.Render(w, "index", bundle)
+	ViewBuilder.Render(w, "index", bundle)
 }
 
 // GenerateHandler is called by the website when we want to execute the generator
@@ -62,6 +65,7 @@ func main() {
 
 	fmt.Println("site:", *dir_site)
 	if len(*dir_site) > 0 {
+		ViewBuilder = view.NewBuilder(filepath.Join(*dir_site, "_layouts"))
 		gen.GenerateSite(*dir_site)
 		return
 	}
