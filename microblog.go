@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/lambrospetrou/gomicroblog/auth"
 	"github.com/lambrospetrou/gomicroblog/gen"
@@ -45,14 +46,28 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	view.Render(w, "index", bundle)
 }
 
+// GenerateHandler is called by the website when we want to execute the generator
+func GenerateHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "I will generate the static site\n\tpath: %s\n", r.URL.Path)
+}
+
 func main() {
 	fmt.Println("Go Microblog service started!")
 
 	// use all the available cores
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
+	var dir_site = flag.String("site", "", "specify a directory that contains the site to generate")
+	flag.Parse()
+
+	fmt.Println("site:", *dir_site)
+	if len(*dir_site) > 0 {
+		gen.GenerateSite(*dir_site)
+		return
+	}
+
 	// Blog endpoints
-	http.HandleFunc("/gen-site", auth.BasicHandler(gen.GenerateHandler))
+	http.HandleFunc("/gen-site", auth.BasicHandler(GenerateHandler))
 	http.HandleFunc("/", rootHandler)
 
 	fs := http.FileServer(http.Dir("static"))
