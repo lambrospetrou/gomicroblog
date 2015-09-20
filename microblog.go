@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	//"github.com/lambrospetrou/gomicroblog/auth"
+	"github.com/lambrospetrou/gomicroblog/auth"
+	"github.com/lambrospetrou/gomicroblog/gen"
 	"github.com/lambrospetrou/gomicroblog/view"
 	"net/http"
 	"regexp"
@@ -24,114 +25,9 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.Handl
 	}
 }
 
-/*
-func viewHandler(w http.ResponseWriter, r *http.Request, id string) {
-	bp_id, err := strconv.Atoi(id)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	bp, err := LoadBlogPost(bp_id)
-	if err != nil {
-		http.NotFound(w, r)
-		return
-	}
-	bp.BodyHtml = template.HTML(bp.ContentHtml)
-	bundle := &TemplateBundle{
-		Post:   bp,
-		Footer: &FooterStruct{Year: time.Now().Year()},
-		Header: &HeaderStruct{Title: bp.Title},
-	}
-
-	renderTemplate(w, "view", bundle)
-}
-
-func editHandler(w http.ResponseWriter, r *http.Request, id string) {
-	bp_id, err := strconv.Atoi(id)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	bp, err := LoadBlogPost(bp_id)
-	if err != nil {
-		http.NotFound(w, r)
-		return
-	}
-	renderTemplate(w, "edit", bp)
-}
-
-func saveHandler(w http.ResponseWriter, r *http.Request, id string) {
-	// avoid changing the data with a GET request
-	if strings.ToLower(r.Method) == "get" {
-		http.Error(w, "Only through the /edit/:id url", http.StatusMethodNotAllowed)
-		return
-	}
-
-	bp_id, err := strconv.Atoi(id)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	bp, err := LoadBlogPost(bp_id)
-	if err != nil {
-		http.NotFound(w, r)
-		return
-	}
-	bp.ContentMarkdown = r.FormValue("markdown")
-	bp.Title = r.FormValue("title")
-	bp.DateCreated, _ = time.Parse("2006-01-02", r.FormValue("date-created"))
-	err = bp.Save()
-	if err != nil {
-		http.Error(w, "Could not save post!", http.StatusInternalServerError)
-		return
-	}
-
-	http.Redirect(w, r, BLOG_PREFIX+"/view/"+bp.IdStr(), http.StatusFound)
-}
-
-func deleteHandler(w http.ResponseWriter, r *http.Request, id string) {
-	bp_id, err := strconv.Atoi(id)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	bp, err := LoadBlogPost(bp_id)
-	if err != nil {
-		http.Error(w, "Could not find the post specified!", http.StatusBadRequest)
-		return
-	}
-	if err = bp.Del(); err != nil {
-		http.Error(w, "Could not delete the post specified!", http.StatusBadRequest)
-		return
-	}
-
-	http.Redirect(w, r, BLOG_PREFIX+"/", http.StatusFound)
-}
-
-func addHandler(w http.ResponseWriter, r *http.Request) {
-	if strings.ToLower(r.Method) == "get" {
-		renderTemplate(w, "add", "")
-		return
-	} else if strings.ToLower(r.Method) == "post" {
-		bp, err := NewBPost()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		bp.ContentMarkdown = r.FormValue("markdown")
-		bp.Title = r.FormValue("title")
-		bp.Save()
-
-		http.Redirect(w, r, BLOG_PREFIX+"/view/"+bp.IdStr(), http.StatusFound)
-		return
-	}
-	http.Error(w, "Not supported method", http.StatusMethodNotAllowed)
-}
-*/
-
 // show all posts
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hi there, I love you %s\n", r.URL.Path)
+	//fmt.Fprintf(w, "Hi there, I love you %s\n", r.URL.Path)
 	/*
 		posts, err := LoadAllBlogPosts()
 		if err != nil {
@@ -155,15 +51,7 @@ func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	// Blog endpoints
-	/*
-		http.HandleFunc("/edit/", auth.BasicHandler(makeHandler(editHandler)))
-		http.HandleFunc("/save/", auth.BasicHandler(makeHandler(saveHandler)))
-		http.HandleFunc("/del/", auth.BasicHandler(makeHandler(deleteHandler)))
-		http.HandleFunc("/add", auth.BasicHandler(addHandler))
-
-		http.HandleFunc("/view/", makeHandler(viewHandler))
-		http.HandleFunc("/all", rootHandler)
-	*/
+	http.HandleFunc("/gen-site", auth.BasicHandler(gen.GenerateHandler))
 	http.HandleFunc("/", rootHandler)
 
 	fs := http.FileServer(http.Dir("static"))
