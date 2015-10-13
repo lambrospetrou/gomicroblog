@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/lambrospetrou/gomicroblog/auth"
 	"github.com/lambrospetrou/gomicroblog/gen"
 	"github.com/lambrospetrou/gomicroblog/view"
 	"log"
@@ -63,20 +62,13 @@ func main() {
 	var dir_site = flag.String("site", "", "specify a directory that contains the site to generate")
 	flag.Parse()
 
-	fmt.Println("site:", *dir_site)
+	log.Println("site:", *dir_site)
 	if len(*dir_site) > 0 {
 		ViewBuilder = view.NewBuilder(filepath.Join(*dir_site, "_layouts"))
-		gen.GenerateSite(*dir_site)
+		gen.GenerateSite(*dir_site, ViewBuilder)
+		return
+	} else {
+		log.Fatalln("Site source directory not given")
 		return
 	}
-
-	// Blog endpoints
-	http.HandleFunc("/gen-site", auth.BasicHandler(GenerateHandler))
-	http.HandleFunc("/", rootHandler)
-
-	fs := http.FileServer(http.Dir("static"))
-	http.Handle("/s/", http.StripPrefix("/s/", fs))
-
-	log.Fatal(http.ListenAndServe(":40080", nil))
-
 }
