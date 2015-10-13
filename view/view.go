@@ -47,6 +47,11 @@ func NewBuilder(layouts_dir string) *Builder {
 	return builder
 }
 
+const (
+	LAYOUT_POST  string = "post"
+	LAYOUT_INDEX string = "index"
+)
+
 // Render the given view name @vname using the given bundle object @o.
 // It writes the output to the given ResponseWriter.
 func (b *Builder) Render(w io.Writer, vname string, o interface{}) error {

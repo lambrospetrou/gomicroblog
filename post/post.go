@@ -54,8 +54,8 @@ func (p *BPost) HTML5CreatedTime() string {
 // post structure with fields filled from the file loaded.
 func FromFile(pathname string) *BPost {
 	//p.ContentHtml = string(blackfriday.MarkdownCommon([]byte(p.ContentMarkdown)))
-	return nil
-	//return &BPost{DateCreated: time.Now()}
+	//return nil
+	return &BPost{DateCreated: time.Now()}
 }
 
 func FromJson(b []byte) *BPost {

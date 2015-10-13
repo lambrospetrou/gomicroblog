@@ -1,12 +1,15 @@
 package gen
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
+	"github.com/lambrospetrou/gomicroblog/post"
 	"github.com/lambrospetrou/gomicroblog/view"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 const (
@@ -27,7 +30,7 @@ func GenerateSite(dir_site string, viewBuilder *view.Builder) error {
 	}
 
 	// iterate over the posts directory and compile each post
-	compilePosts(filepath.Join(dir_site, POSTS_DIR_SRC), filepath.Join(SITE_DST, POSTS_DIR_DST), viewBuilder)
+	compilePosts(filepath.Join(dir_site, POSTS_DIR_SRC), filepath.Join(dst_dir, POSTS_DIR_DST), viewBuilder)
 
 	return nil
 }
@@ -61,38 +64,42 @@ func prepareSiteDest(dst string) error {
 }
 
 func compilePosts(src_posts_dir string, dst_posts_dir string, viewBuilder *view.Builder) error {
-	//filepath.Walk(src_posts_dir, createWalker())
-
 	files, err := ioutil.ReadDir(src_posts_dir)
 	if err != nil {
 		return err
 	}
+	// create destination directory
+	if err = os.MkdirAll(dst_posts_dir, SITE_DST_PERM); err != nil {
+		return err
+	}
 	// iterate over all the posts
 	for _, cpost := range files {
-		fmt.Println("== Visiting file or dir ==")
+		fmt.Println("== Compiling article-post ==")
 		fmt.Println(cpost.Name(), cpost.IsDir(), cpost.ModTime())
+		if cpost.IsDir() {
+			fmt.Println(compileDirPost(cpost, dst_posts_dir, viewBuilder))
+		} else {
+			fmt.Println(compileSinglePost(cpost, dst_posts_dir, viewBuilder))
+		}
 	}
 	return nil
 }
 
-func createWalker() filepath.WalkFunc {
-	var counter int64 = 0
-	return func(path string, info os.FileInfo, err error) error {
-		counter++
-		if counter == 1 {
-			// do not do anything in the root directory
-			return nil
-		}
-		return walkFn(path, info, err)
+func compileSinglePost(info os.FileInfo, dst_posts_dir string, viewBuilder *view.Builder) error {
+	f, err := os.Create(filepath.Join(dst_posts_dir, info.Name()[:len(info.Name())-3]))
+	if err != nil {
+		return err
 	}
+	bundle := &view.TemplateBundle{
+		Footer: &view.FooterStruct{Year: time.Now().Year()},
+		Header: &view.HeaderStruct{Title: "Single Post"},
+		Post:   post.FromFile(info.Name()),
+	}
+	err = viewBuilder.Render(bufio.NewWriter(f), view.LAYOUT_POST, bundle)
+	fmt.Println("Error: ", err)
+	return err
 }
 
-func walkFn(path string, info os.FileInfo, err error) error {
-	fmt.Println("== Visiting file or dir ==")
-	fmt.Println(path, info.IsDir(), info.Name(), info.ModTime())
-	// skip the post directories recursion
-	if info.IsDir() {
-		return filepath.SkipDir
-	}
+func compileDirPost(info os.FileInfo, dst_posts_dir string, viewBuilder *view.Builder) error {
 	return nil
 }
