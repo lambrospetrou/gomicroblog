@@ -79,24 +79,44 @@ func compilePosts(src_posts_dir string, dst_posts_dir string, viewBuilder *view.
 		if cpost.IsDir() {
 			fmt.Println(compileDirPost(cpost, dst_posts_dir, viewBuilder))
 		} else {
-			fmt.Println(compileSinglePost(cpost, dst_posts_dir, viewBuilder))
+			fmt.Println(compileSinglePost(src_posts_dir, cpost, dst_posts_dir, viewBuilder))
 		}
 	}
 	return nil
 }
 
-func compileSinglePost(info os.FileInfo, dst_posts_dir string, viewBuilder *view.Builder) error {
-	f, err := os.Create(filepath.Join(dst_posts_dir, info.Name()[:len(info.Name())-3]))
-	if err != nil {
+func compileSinglePost(src_post_dir string, info os.FileInfo, dst_posts_dir string, viewBuilder *view.Builder) error {
+	postName := info.Name()[11 : len(info.Name())-3]
+	postDir := filepath.Join(dst_posts_dir, postName)
+	// create the directory of the post
+	if err := os.MkdirAll(postDir, SITE_DST_PERM); err != nil {
 		return err
 	}
+
+	// get the markdown filename
+	postMarkdownPath := filepath.Join(src_post_dir, info.Name())
+
+	// create the actual HTML file for the post
 	bundle := &view.TemplateBundle{
 		Footer: &view.FooterStruct{Year: time.Now().Year()},
 		Header: &view.HeaderStruct{Title: "Single Post"},
-		Post:   post.FromFile(info.Name()),
+		Post:   post.FromFile(postMarkdownPath),
 	}
-	err = viewBuilder.Render(bufio.NewWriter(f), view.LAYOUT_POST, bundle)
-	fmt.Println("Error: ", err)
+	f, err := os.Create(filepath.Join(postDir, postName+".html"))
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	w := bufio.NewWriter(f)
+	err = viewBuilder.Render(w, view.LAYOUT_POST, bundle)
+	w.Flush()
+
+	// copy the markdown file to the directory
+	markdown, err := ioutil.ReadFile(postMarkdownPath)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(filepath.Join(postDir, info.Name()), markdown, SITE_DST_PERM)
 	return err
 }
 
