@@ -42,8 +42,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	bundle := &view.TemplateBundleIndex{
 		Footer: &view.FooterStruct{Year: time.Now().Year()},
 		Header: &view.HeaderStruct{Title: "All posts"},
-		//Posts:  posts,
-		Posts: nil,
+		Posts:  nil,
 	}
 	ViewBuilder.Render(w, "index", bundle)
 }
@@ -65,7 +64,10 @@ func main() {
 	log.Println("site:", *dir_site)
 	if len(*dir_site) > 0 {
 		ViewBuilder = view.NewBuilder(filepath.Join(*dir_site, "_layouts"))
-		gen.GenerateSite(*dir_site, ViewBuilder)
+		err := gen.GenerateSite(*dir_site, ViewBuilder, filepath.Join(*dir_site, "config.json"))
+		if err != nil {
+			panic(err)
+		}
 		return
 	} else {
 		log.Fatalln("Site source directory not given")

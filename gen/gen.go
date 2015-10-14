@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	lpio "github.com/lambrospetrou/go-utils/io"
+	"github.com/lambrospetrou/gomicroblog/config"
 	"github.com/lambrospetrou/gomicroblog/post"
 	"github.com/lambrospetrou/gomicroblog/view"
 	"io/ioutil"
@@ -21,7 +23,7 @@ const (
 )
 
 // GenerateHandler is called by the website when we want to execute the generator
-func GenerateSite(dir_site string, viewBuilder *view.Builder) error {
+func GenerateSite(dir_site string, viewBuilder *view.Builder, confPath string) error {
 	fmt.Fprintln(os.Stdout, "dir:", dir_site)
 	// prepare the destination site dir
 	dst_dir := filepath.Join(dir_site, SITE_DST)
@@ -30,8 +32,18 @@ func GenerateSite(dir_site string, viewBuilder *view.Builder) error {
 	}
 
 	// iterate over the posts directory and compile each post
-	compilePosts(filepath.Join(dir_site, POSTS_DIR_SRC), filepath.Join(dst_dir, POSTS_DIR_DST), viewBuilder)
+	if err := compilePosts(filepath.Join(dir_site, POSTS_DIR_SRC), filepath.Join(dst_dir, POSTS_DIR_DST), viewBuilder); err != nil {
+		return err
+	}
 
+	conf := config.FromConfiguration(confPath)
+	// copy all the static paths
+	for _, path := range conf.StaticPaths {
+		fmt.Println("path", path)
+		if err := lpio.Copy(path, filepath.Join(dst_dir, filepath.Base(path)), SITE_DST_PERM); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -77,7 +89,7 @@ func compilePosts(src_posts_dir string, dst_posts_dir string, viewBuilder *view.
 		fmt.Println("== Compiling article-post ==")
 		fmt.Println(cpost.Name(), cpost.IsDir(), cpost.ModTime())
 		if cpost.IsDir() {
-			fmt.Println(compileDirPost(cpost, dst_posts_dir, viewBuilder))
+			fmt.Println(compileDirPost(src_posts_dir, cpost, dst_posts_dir, viewBuilder))
 		} else {
 			fmt.Println(compileSinglePost(src_posts_dir, cpost, dst_posts_dir, viewBuilder))
 		}
@@ -86,7 +98,7 @@ func compilePosts(src_posts_dir string, dst_posts_dir string, viewBuilder *view.
 }
 
 func compileSinglePost(src_post_dir string, info os.FileInfo, dst_posts_dir string, viewBuilder *view.Builder) error {
-	postName := info.Name()[11 : len(info.Name())-3]
+	postName := getPostNameFromRaw(info)
 	postDir := filepath.Join(dst_posts_dir, postName)
 	// create the directory of the post
 	if err := os.MkdirAll(postDir, SITE_DST_PERM); err != nil {
@@ -96,13 +108,43 @@ func compileSinglePost(src_post_dir string, info os.FileInfo, dst_posts_dir stri
 	// get the markdown filename
 	postMarkdownPath := filepath.Join(src_post_dir, info.Name())
 
+	// copy the markdown file to the directory
+	if err := lpio.CopyFile(postMarkdownPath, filepath.Join(postDir, info.Name()), SITE_DST_PERM); err != nil {
+		return err
+	}
+	return generateHTMLFromMarkdown(postMarkdownPath, filepath.Join(postDir, "index.html"), viewBuilder)
+}
+
+func compileDirPost(src_post_dir string, info os.FileInfo, dst_posts_dir string, viewBuilder *view.Builder) error {
+	postName := getPostNameFromRaw(info)
+	srcPostDir := filepath.Join(src_post_dir, info.Name())
+	dstPostDir := filepath.Join(dst_posts_dir, postName)
+	if err := lpio.Copy(srcPostDir, dstPostDir, SITE_DST_PERM); err != nil {
+		return err
+	}
+
+	return generateHTMLFromMarkdown(filepath.Join(srcPostDir, info.Name()+".md"),
+		filepath.Join(dstPostDir, "index.html"), viewBuilder)
+}
+
+// getPostNameFromRaw() returns the post name by discarding the date at the front and any extension
+func getPostNameFromRaw(info os.FileInfo) string {
+	if info.IsDir() {
+		return info.Name()[11:]
+	}
+	return info.Name()[11 : len(info.Name())-3]
+}
+
+// generateHTMLFromMarkdown() generates the HTML of the given markdown file 'postMarkdownPath' and stores it in the file denoted by 'postDstPath'.
+func generateHTMLFromMarkdown(postMarkdownPath string, postDstPath string, viewBuilder *view.Builder) error {
+	p := post.FromFile(postMarkdownPath)
 	// create the actual HTML file for the post
 	bundle := &view.TemplateBundle{
 		Footer: &view.FooterStruct{Year: time.Now().Year()},
-		Header: &view.HeaderStruct{Title: "Single Post"},
-		Post:   post.FromFile(postMarkdownPath),
+		Header: &view.HeaderStruct{Title: p.Title},
+		Post:   p,
 	}
-	f, err := os.Create(filepath.Join(postDir, postName+".html"))
+	f, err := os.Create(postDstPath)
 	if err != nil {
 		return err
 	}
@@ -110,16 +152,5 @@ func compileSinglePost(src_post_dir string, info os.FileInfo, dst_posts_dir stri
 	w := bufio.NewWriter(f)
 	err = viewBuilder.Render(w, view.LAYOUT_POST, bundle)
 	w.Flush()
-
-	// copy the markdown file to the directory
-	markdown, err := ioutil.ReadFile(postMarkdownPath)
-	if err != nil {
-		return err
-	}
-	err = ioutil.WriteFile(filepath.Join(postDir, info.Name()), markdown, SITE_DST_PERM)
 	return err
-}
-
-func compileDirPost(info os.FileInfo, dst_posts_dir string, viewBuilder *view.Builder) error {
-	return nil
 }
