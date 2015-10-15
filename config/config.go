@@ -30,7 +30,7 @@ func FromConfiguration(path string) Config {
 
 func sanitizePaths(conf Config) {
 	for i, path := range conf.StaticPaths {
-		// try as is the path
+		// try the path as given first
 		if _, err := os.Stat(path); err != nil {
 			// now check if they are relative to the config file
 			confBase := filepath.Dir(conf.PathConfig)

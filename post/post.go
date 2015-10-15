@@ -1,21 +1,26 @@
 package post
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
-	//"github.com/russross/blackfriday"
-	//"html/template"
+	"errors"
+	"github.com/russross/blackfriday"
+	"html/template"
+	"io/ioutil"
+	"log"
+	"strings"
 	"time"
 )
 
 type BPost struct {
-	Id              string    `json:"id"`
-	Title           string    `json:"title"`
-	Author          string    `json:"author"`
-	UrlPermalink    string    `json:"url_permalink"`
-	DateCreated     time.Time `json:"date_created"`
-	DateEdited      time.Time `json:"date_edited"`
-	ContentMarkdown string    `json:"content_markdown"`
-	ContentHtml     string    `json:"content_html"`
+	Title           string        `json:"title"`
+	Author          string        `json:"author"`
+	UrlPermalink    string        `json:"url_permalink"`
+	DateCreated     time.Time     `json:"date_created"`
+	DateEdited      time.Time     `json:"date_edited"`
+	ContentMarkdown string        `json:"content_markdown"`
+	ContentHtml     template.HTML `json:"content_html"`
 }
 
 // ByDate implements sort.Interface for []BPost based on
@@ -52,10 +57,21 @@ func (p *BPost) HTML5CreatedTime() string {
 
 // FromFile reads a post folder (that follows our special structure) and creates a new
 // post structure with fields filled from the file loaded.
-func FromFile(pathname string) *BPost {
+func FromMarkdown(pathname string) (*BPost, error) {
 	//p.ContentHtml = string(blackfriday.MarkdownCommon([]byte(p.ContentMarkdown)))
 	//return nil
-	return &BPost{DateCreated: time.Now()}
+	bp := &BPost{}
+
+	markdown, err := ioutil.ReadFile(pathname)
+	if err != nil {
+		return nil, err
+	}
+	bytesRead, err := parseFrontMatter(bp, markdown)
+
+	bp.ContentMarkdown = string(markdown[bytesRead:])
+	bp.ContentHtml = template.HTML(string(blackfriday.MarkdownCommon(markdown[bytesRead:])))
+
+	return bp, nil
 }
 
 func FromJson(b []byte) *BPost {
@@ -66,19 +82,30 @@ func FromJson(b []byte) *BPost {
 	return bp
 }
 
-/*
-// New creates a new blog post returns it empty setting its creation date to time.Noe
-func New() *BPost {
-	return &BPost{DateCreated: time.Now()}
+func parseFrontMatter(bp *BPost, markdown []byte) (int, error) {
+	bRead := 0
+	scanner := bufio.NewScanner(bytes.NewReader(markdown))
+	if scanner == nil {
+		return -1, errors.New("Could not create reader from the markdown bytes: " + string(markdown))
+	}
+	lines := 0
+	for scanner.Scan() {
+		line := scanner.Text()
+		bRead += len(line)
+		lines++
+		if line == "---" {
+			if lines > 1 {
+				return bRead, nil
+			}
+		}
+		segments := strings.Split(line, ":")
+		switch segments[0] {
+		case "title":
+			bp.Title = strings.Trim(segments[1], " ")
+			break
+		default:
+			log.Println(errors.New("Wrong property defined in the front-matter: " + line))
+		}
+	}
+	return bRead, nil
 }
-
-func (p *BPost) PrepareSave() {
-	// update the HTML content
-	p.DateEdited = time.Now()
-	p.ContentHtml = string(blackfriday.MarkdownCommon([]byte(p.ContentMarkdown)))
-
-	// set the ID the same as the URL friendly link and it will be updated
-	// by the storager used if necessary
-	p.Id = p.UrlPermalink
-}
-*/

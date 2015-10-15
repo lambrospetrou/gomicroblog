@@ -137,7 +137,10 @@ func getPostNameFromRaw(info os.FileInfo) string {
 
 // generateHTMLFromMarkdown() generates the HTML of the given markdown file 'postMarkdownPath' and stores it in the file denoted by 'postDstPath'.
 func generateHTMLFromMarkdown(postMarkdownPath string, postDstPath string, viewBuilder *view.Builder) error {
-	p := post.FromFile(postMarkdownPath)
+	p, err := post.FromMarkdown(postMarkdownPath)
+	if err != nil {
+		return err
+	}
 	// create the actual HTML file for the post
 	bundle := &view.TemplateBundle{
 		Footer: &view.FooterStruct{Year: time.Now().Year()},
