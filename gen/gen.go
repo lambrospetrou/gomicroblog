@@ -1,7 +1,6 @@
 package gen
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	lpio "github.com/lambrospetrou/go-utils/io"
@@ -20,7 +19,15 @@ const (
 
 	POSTS_DIR_SRC = "_posts"
 	POSTS_DIR_DST = "articles"
+
+	SITE_INDEX_TITLE = "All articles | Lambros Petrou"
 )
+
+type SiteBundle struct {
+	SiteDst     string
+	PostsDstDir string
+	Posts       []*post.BPost
+}
 
 // GenerateHandler is called by the website when we want to execute the generator
 func GenerateSite(dir_site string, viewBuilder *view.Builder, confPath string) error {
@@ -31,13 +38,20 @@ func GenerateSite(dir_site string, viewBuilder *view.Builder, confPath string) e
 		return err
 	}
 
+	bundle := &SiteBundle{SiteDst: dst_dir, PostsDstDir: filepath.Join(dst_dir, POSTS_DIR_DST)}
 	// iterate over the posts directory and compile each post
-	if err := compilePosts(filepath.Join(dir_site, POSTS_DIR_SRC), filepath.Join(dst_dir, POSTS_DIR_DST), viewBuilder); err != nil {
+	if err := compilePosts(filepath.Join(dir_site, POSTS_DIR_SRC),
+		filepath.Join(dst_dir, POSTS_DIR_DST), viewBuilder, bundle); err != nil {
 		return err
 	}
 
-	conf := config.FromConfiguration(confPath)
+	// compile the index page
+	if err := generateIndexHTML(bundle, viewBuilder); err != nil {
+		return err
+	}
+
 	// copy all the static paths
+	conf := config.FromConfiguration(confPath)
 	for _, path := range conf.StaticPaths {
 		fmt.Println("path", path)
 		if err := lpio.Copy(path, filepath.Join(dst_dir, filepath.Base(path)), SITE_DST_PERM); err != nil {
@@ -75,7 +89,7 @@ func prepareSiteDest(dst string) error {
 	return nil
 }
 
-func compilePosts(src_posts_dir string, dst_posts_dir string, viewBuilder *view.Builder) error {
+func compilePosts(src_posts_dir string, dst_posts_dir string, viewBuilder *view.Builder, bundle *SiteBundle) error {
 	files, err := ioutil.ReadDir(src_posts_dir)
 	if err != nil {
 		return err
@@ -84,48 +98,73 @@ func compilePosts(src_posts_dir string, dst_posts_dir string, viewBuilder *view.
 	if err = os.MkdirAll(dst_posts_dir, SITE_DST_PERM); err != nil {
 		return err
 	}
+	allPosts := make([]*post.BPost, 0, 10)
 	// iterate over all the posts
 	for _, cpost := range files {
 		fmt.Println("== Compiling article-post ==")
 		fmt.Println(cpost.Name(), cpost.IsDir(), cpost.ModTime())
+		var p *post.BPost
+		var err error
 		if cpost.IsDir() {
-			fmt.Println(compileDirPost(src_posts_dir, cpost, dst_posts_dir, viewBuilder))
+			p, err = compileDirPost(src_posts_dir, cpost, dst_posts_dir, viewBuilder)
+			if err != nil {
+				panic(err)
+			}
+
 		} else {
-			fmt.Println(compileSinglePost(src_posts_dir, cpost, dst_posts_dir, viewBuilder))
+			p, err = compileSinglePost(src_posts_dir, cpost, dst_posts_dir, viewBuilder)
+			if err != nil {
+				panic(err)
+			}
 		}
+		allPosts = append(allPosts, p)
 	}
+	bundle.Posts = allPosts
 	return nil
 }
 
-func compileSinglePost(src_post_dir string, info os.FileInfo, dst_posts_dir string, viewBuilder *view.Builder) error {
+func compileSinglePost(src_post_dir string, info os.FileInfo, dst_posts_dir string, viewBuilder *view.Builder) (*post.BPost, error) {
 	postName := getPostNameFromRaw(info)
 	postDir := filepath.Join(dst_posts_dir, postName)
 	// create the directory of the post
 	if err := os.MkdirAll(postDir, SITE_DST_PERM); err != nil {
-		return err
+		return nil, err
 	}
 
 	// get the markdown filename
 	postMarkdownPath := filepath.Join(src_post_dir, info.Name())
 
+	// create the post object
+	p, err := post.FromMarkdown(postMarkdownPath)
+	if err != nil {
+		return nil, err
+	}
+
 	// copy the markdown file to the directory
 	if err := lpio.CopyFile(postMarkdownPath, filepath.Join(postDir, info.Name()), SITE_DST_PERM); err != nil {
-		return err
+		return nil, err
 	}
-	return generateHTMLFromMarkdown(postMarkdownPath, filepath.Join(postDir, "index.html"), viewBuilder)
+	return p, generatePostHTML(p, filepath.Join(postDir, "index.html"), viewBuilder)
 }
 
-func compileDirPost(src_post_dir string, info os.FileInfo, dst_posts_dir string, viewBuilder *view.Builder) error {
+func compileDirPost(src_post_dir string, info os.FileInfo, dst_posts_dir string, viewBuilder *view.Builder) (*post.BPost, error) {
 	postName := getPostNameFromRaw(info)
 	srcPostDir := filepath.Join(src_post_dir, info.Name())
 	dstPostDir := filepath.Join(dst_posts_dir, postName)
 	if err := lpio.Copy(srcPostDir, dstPostDir, SITE_DST_PERM); err != nil {
-		return err
+		return nil, err
 	}
 
-	return generateHTMLFromMarkdown(filepath.Join(srcPostDir, info.Name()+".md"),
-		filepath.Join(dstPostDir, "index.html"), viewBuilder)
+	// create the post object
+	p, err := post.FromMarkdown(filepath.Join(srcPostDir, info.Name()+".md"))
+	if err != nil {
+		return nil, err
+	}
+
+	return p, generatePostHTML(p, filepath.Join(dstPostDir, "index.html"), viewBuilder)
 }
+
+/////////////////////////////////
 
 // getPostNameFromRaw() returns the post name by discarding the date at the front and any extension
 func getPostNameFromRaw(info os.FileInfo) string {
@@ -135,25 +174,23 @@ func getPostNameFromRaw(info os.FileInfo) string {
 	return info.Name()[11 : len(info.Name())-3]
 }
 
-// generateHTMLFromMarkdown() generates the HTML of the given markdown file 'postMarkdownPath' and stores it in the file denoted by 'postDstPath'.
-func generateHTMLFromMarkdown(postMarkdownPath string, postDstPath string, viewBuilder *view.Builder) error {
-	p, err := post.FromMarkdown(postMarkdownPath)
-	if err != nil {
-		return err
-	}
+// generateHTMLFromMarkdown() generates the HTML of the given post object and stores it in the file denoted by 'postDstPath'.
+func generatePostHTML(p *post.BPost, postDstPath string, viewBuilder *view.Builder) error {
 	// create the actual HTML file for the post
 	bundle := &view.TemplateBundle{
 		Footer: &view.FooterStruct{Year: time.Now().Year()},
 		Header: &view.HeaderStruct{Title: p.Title},
 		Post:   p,
 	}
-	f, err := os.Create(postDstPath)
-	if err != nil {
-		return err
+	return viewBuilder.RenderToPath(postDstPath, view.LAYOUT_POST, bundle)
+}
+
+func generateIndexHTML(b *SiteBundle, viewBuilder *view.Builder) error {
+	// create the actual HTML file for the post
+	bundle := &view.TemplateBundleIndex{
+		Footer: &view.FooterStruct{Year: time.Now().Year()},
+		Header: &view.HeaderStruct{Title: SITE_INDEX_TITLE},
+		Posts:  b.Posts,
 	}
-	defer f.Close()
-	w := bufio.NewWriter(f)
-	err = viewBuilder.Render(w, view.LAYOUT_POST, bundle)
-	w.Flush()
-	return err
+	return viewBuilder.RenderToPath(filepath.Join(b.PostsDstDir, "index.html"), view.LAYOUT_INDEX, bundle)
 }

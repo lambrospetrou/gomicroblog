@@ -1,9 +1,11 @@
 package view
 
 import (
+	"bufio"
 	"github.com/lambrospetrou/gomicroblog/post"
 	"html/template"
 	"io"
+	"os"
 	"path/filepath"
 )
 
@@ -57,6 +59,21 @@ const (
 func (b *Builder) Render(w io.Writer, vname string, o interface{}) error {
 	// now we can call the correct template by the basename filename
 	return b.templates.ExecuteTemplate(w, vname+".html", o)
+}
+
+// Render the given view name @vname using the given bundle object @o.
+// It writes the output to the given ResponseWriter.
+func (b *Builder) RenderToPath(dst string, vname string, o interface{}) error {
+	f, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	w := bufio.NewWriter(f)
+	// now we can call the correct template by the basename filename
+	err = b.templates.ExecuteTemplate(w, vname+".html", o)
+	w.Flush()
+	return err
 }
 
 /*
