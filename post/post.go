@@ -39,10 +39,6 @@ func (a ByDate) Less(i, j int) bool {
 	return a[i].DateEdited.Unix() >= a[j].DateEdited.Unix()
 }
 
-func (p *BPost) IdStr() string {
-	return p.Id
-}
-
 func (p *BPost) FormattedEditedTime() string {
 	return p.DateEdited.Format("January 02, 2006 | Monday -- 15:04PM")
 }
@@ -55,11 +51,17 @@ func (p *BPost) HTML5CreatedTime() string {
 	return p.DateCreated.Format("2006-01-02")
 }
 
+func FromJson(b []byte) *BPost {
+	bp := &BPost{}
+	if err := json.Unmarshal(b, bp); err != nil {
+		return nil
+	}
+	return bp
+}
+
 // FromFile reads a post folder (that follows our special structure) and creates a new
 // post structure with fields filled from the file loaded.
 func FromMarkdown(pathname string) (*BPost, error) {
-	//p.ContentHtml = string(blackfriday.MarkdownCommon([]byte(p.ContentMarkdown)))
-	//return nil
 	bp := &BPost{}
 
 	markdown, err := ioutil.ReadFile(pathname)
@@ -72,14 +74,6 @@ func FromMarkdown(pathname string) (*BPost, error) {
 	bp.ContentHtml = template.HTML(string(blackfriday.MarkdownCommon(markdown[bytesRead:])))
 
 	return bp, nil
-}
-
-func FromJson(b []byte) *BPost {
-	bp := &BPost{}
-	if err := json.Unmarshal(b, bp); err != nil {
-		return nil
-	}
-	return bp
 }
 
 func parseFrontMatter(bp *BPost, markdown []byte) (int, error) {
@@ -97,6 +91,9 @@ func parseFrontMatter(bp *BPost, markdown []byte) (int, error) {
 			if lines > 1 {
 				return bRead, nil
 			}
+		} else if lines == 1 {
+			// no front-matter is defined - should start from the first line
+			return 0, nil
 		}
 		segments := strings.Split(line, ":")
 		switch segments[0] {
