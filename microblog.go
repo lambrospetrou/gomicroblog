@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"github.com/lambrospetrou/gomicroblog/gen"
-	"github.com/lambrospetrou/gomicroblog/view"
 	"log"
 	"path/filepath"
 	"runtime"
@@ -21,8 +20,7 @@ func main() {
 
 	log.Println("site:", *dir_site)
 	if len(*dir_site) > 0 {
-		ViewBuilder := view.NewBuilder(filepath.Join(*dir_site, "_layouts"))
-		err := gen.GenerateSite(*dir_site, ViewBuilder, filepath.Join(*dir_site, "config.json"))
+		err := gen.GenerateSite(*dir_site, filepath.Join(*dir_site, "config.json"))
 		if err != nil {
 			panic(err)
 		}

@@ -31,8 +31,12 @@ type SiteBundle struct {
 }
 
 // GenerateHandler is called by the website when we want to execute the generator
-func GenerateSite(dir_site string, viewBuilder *view.Builder, confPath string) error {
+func GenerateSite(dir_site string, confPath string) error {
 	fmt.Fprintln(os.Stdout, "dir:", dir_site)
+
+	conf := config.FromConfiguration(confPath)
+	viewBuilder := view.NewBuilder(filepath.Join(dir_site, "_layouts"), conf.TemplatePaths)
+
 	// prepare the destination site dir
 	dst_dir := filepath.Join(dir_site, SITE_DST)
 	if err := prepareSiteDest(dst_dir); err != nil {
@@ -52,7 +56,6 @@ func GenerateSite(dir_site string, viewBuilder *view.Builder, confPath string) e
 	}
 
 	// copy all the static paths
-	conf := config.FromConfiguration(confPath)
 	for _, path := range conf.StaticPaths {
 		fmt.Println("path", path)
 		if err := lpio.Copy(path, filepath.Join(dst_dir, filepath.Base(path)), SITE_DST_PERM); err != nil {

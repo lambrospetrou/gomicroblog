@@ -37,15 +37,21 @@ type Builder struct {
 
 // NewBuilder returns a builder that will create the views based on the layouts defined
 // inside the given directory name.
-func NewBuilder(layouts_dir string) *Builder {
+func NewBuilder(layouts_dir string, templatePaths []string) *Builder {
 	builder := &Builder{}
 	// compiles and holds all the templates in memory for fast creation
-	builder.templates = template.Must(template.ParseFiles(
-		filepath.Join(layouts_dir, "partials/header.html"),
-		filepath.Join(layouts_dir, "partials/footer.html"),
-		filepath.Join(layouts_dir, "post.html"),
-		filepath.Join(layouts_dir, "index.html")),
-	)
+	for i, _ := range templatePaths {
+		templatePaths[i] = filepath.Join(layouts_dir, templatePaths[i])
+	}
+	builder.templates = template.Must(template.ParseFiles(templatePaths...))
+	/*
+		builder.templates = template.Must(template.ParseFiles(
+			filepath.Join(layouts_dir, "partials/header.html"),
+			filepath.Join(layouts_dir, "partials/footer.html"),
+			filepath.Join(layouts_dir, "post.html"),
+			filepath.Join(layouts_dir, "index.html")),
+		)
+	*/
 	return builder
 }
 
