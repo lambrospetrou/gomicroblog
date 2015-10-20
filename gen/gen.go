@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"time"
 )
 
@@ -186,6 +187,7 @@ func generatePostHTML(p *post.BPost, postDstPath string, viewBuilder *view.Build
 }
 
 func generateIndexHTML(b *SiteBundle, viewBuilder *view.Builder) error {
+	sort.Sort(post.ByDate(b.Posts))
 	// create the actual HTML file for the post
 	bundle := &view.TemplateBundleIndex{
 		Footer: &view.FooterStruct{Year: time.Now().Year()},

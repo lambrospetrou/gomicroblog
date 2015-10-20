@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"log"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -39,8 +40,12 @@ func (a ByDate) Less(i, j int) bool {
 	return a[i].DateEdited.Unix() >= a[j].DateEdited.Unix()
 }
 
-func (p *BPost) FormattedEditedTime() string {
+func (p *BPost) FormattedEditedTimeLong() string {
 	return p.DateEdited.Format("January 02, 2006 | Monday -- 15:04PM")
+}
+
+func (p *BPost) FormattedEditedTime() string {
+	return p.DateEdited.Format("2006-01-02")
 }
 
 func (p *BPost) FormattedCreatedTime() string {
@@ -64,14 +69,26 @@ func FromJson(b []byte) *BPost {
 func FromMarkdown(pathname string) (*BPost, error) {
 	bp := &BPost{}
 
+	var err error
+
+	// extract the date from the filename
+	dateStr := filepath.Base(pathname)[:10]
+	bp.DateCreated, err = time.Parse("2006-01-02", dateStr)
+	if err != nil {
+		return nil, err
+	}
+
 	markdown, err := ioutil.ReadFile(pathname)
 	if err != nil {
 		return nil, err
 	}
 	bytesRead, err := parseFrontMatter(bp, markdown)
 
-	bp.ContentMarkdown = string(markdown[bytesRead:])
-	bp.ContentHtml = template.HTML(string(blackfriday.MarkdownCommon(markdown[bytesRead:])))
+	log.Println(string(markdown), string(markdown[bytesRead:]))
+
+	remBytes := markdown[bytesRead:]
+	bp.ContentMarkdown = string(remBytes)
+	bp.ContentHtml = template.HTML(string(blackfriday.MarkdownCommon(remBytes)))
 
 	return bp, nil
 }
@@ -82,14 +99,22 @@ func parseFrontMatter(bp *BPost, markdown []byte) (int, error) {
 	if scanner == nil {
 		return -1, errors.New("Could not create reader from the markdown bytes: " + string(markdown))
 	}
+
+	foundDateEdited := false
+
 	lines := 0
 	for scanner.Scan() {
-		line := scanner.Text()
-		bRead += len(line)
+		bytesScanned := scanner.Bytes()
+		bRead += len(bytesScanned)
+		line := string(bytesScanned)
 		lines++
 		if line == "---" {
 			if lines > 1 {
-				return bRead, nil
+				// We found the second line of the matter so stop the reading
+				break
+			} else {
+				// the first '---'
+				continue
 			}
 		} else if lines == 1 {
 			// no front-matter is defined - should start from the first line
@@ -100,9 +125,23 @@ func parseFrontMatter(bp *BPost, markdown []byte) (int, error) {
 		case "title":
 			bp.Title = strings.Trim(segments[1], " ")
 			break
+		case "url":
+			bp.UrlPermalink = strings.Trim(segments[1], " ")
+			break
+		case "date-edited":
+			// Ignore invalid dates.
+			bp.DateEdited, _ = time.Parse("2006-01-02", strings.Trim(segments[1], " "))
+			foundDateEdited = true
+			break
 		default:
 			log.Println(errors.New("Wrong property defined in the front-matter: " + line))
 		}
+	}
+	// add the new line bytes since they are discarded by the scanner
+	bRead += len([]byte("\n")) * lines
+	// Set the date edited to those created.
+	if !foundDateEdited {
+		bp.DateEdited = bp.DateCreated
 	}
 	return bRead, nil
 }
