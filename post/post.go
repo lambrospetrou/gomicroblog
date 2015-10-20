@@ -84,8 +84,6 @@ func FromMarkdown(pathname string) (*BPost, error) {
 	}
 	bytesRead, err := parseFrontMatter(bp, markdown)
 
-	log.Println(string(markdown), string(markdown[bytesRead:]))
-
 	remBytes := markdown[bytesRead:]
 	bp.ContentMarkdown = string(remBytes)
 	bp.ContentHtml = template.HTML(string(blackfriday.MarkdownCommon(remBytes)))
