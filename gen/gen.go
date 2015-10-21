@@ -197,5 +197,5 @@ func generateIndexHTML(b *SiteBundle, viewBuilder *view.Builder) error {
 		Header: &view.HeaderStruct{Title: SITE_INDEX_TITLE},
 		Posts:  b.Posts,
 	}
-	return viewBuilder.RenderToPath(filepath.Join(b.PostsDstDir, "index.html"), view.LAYOUT_INDEX, bundle)
+	return viewBuilder.RenderToPath(filepath.Join(b.SiteDst, "index.html"), view.LAYOUT_INDEX, bundle)
 }

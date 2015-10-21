@@ -44,8 +44,8 @@ func (p *BPost) FormattedEditedTimeLong() string {
 	return p.DateEdited.Format("January 02, 2006 | Monday -- 15:04PM")
 }
 
-func (p *BPost) FormattedEditedTime() string {
-	return p.DateEdited.Format("2006-01-02")
+func (p *BPost) FormattedCreatedTimeLong() string {
+	return p.DateCreated.Format("January 02, 2006 | Monday -- 15:04PM")
 }
 
 func (p *BPost) FormattedCreatedTime() string {
