@@ -78,6 +78,10 @@ func FromMarkdown(pathname string) (*BPost, error) {
 		return nil, err
 	}
 
+	// assign the Url to the current pathname but might be overwritten
+	bp.UrlPermalink = filepath.Base(pathname)[11:]
+	bp.UrlPermalink = bp.UrlPermalink[:len(bp.UrlPermalink)-3]
+
 	markdown, err := ioutil.ReadFile(pathname)
 	if err != nil {
 		return nil, err

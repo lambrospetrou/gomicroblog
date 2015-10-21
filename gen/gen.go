@@ -128,12 +128,7 @@ func compilePosts(src_posts_dir string, dst_posts_dir string, viewBuilder *view.
 }
 
 func compileSinglePost(src_post_dir string, info os.FileInfo, dst_posts_dir string, viewBuilder *view.Builder) (*post.BPost, error) {
-	postName := getPostNameFromRaw(info)
-	postDir := filepath.Join(dst_posts_dir, postName)
-	// create the directory of the post
-	if err := os.MkdirAll(postDir, SITE_DST_PERM); err != nil {
-		return nil, err
-	}
+	//postName := getPostNameFromRaw(info)
 
 	// get the markdown filename
 	postMarkdownPath := filepath.Join(src_post_dir, info.Name())
@@ -144,6 +139,11 @@ func compileSinglePost(src_post_dir string, info os.FileInfo, dst_posts_dir stri
 		return nil, err
 	}
 
+	// create the directory of the post
+	postDir := filepath.Join(dst_posts_dir, p.UrlPermalink)
+	if err := os.MkdirAll(postDir, SITE_DST_PERM); err != nil {
+		return nil, err
+	}
 	// copy the markdown file to the directory
 	if err := lpio.CopyFile(postMarkdownPath, filepath.Join(postDir, info.Name()), SITE_DST_PERM); err != nil {
 		return nil, err
@@ -152,16 +152,17 @@ func compileSinglePost(src_post_dir string, info os.FileInfo, dst_posts_dir stri
 }
 
 func compileDirPost(src_post_dir string, info os.FileInfo, dst_posts_dir string, viewBuilder *view.Builder) (*post.BPost, error) {
-	postName := getPostNameFromRaw(info)
+	//postName := getPostNameFromRaw(info)
 	srcPostDir := filepath.Join(src_post_dir, info.Name())
-	dstPostDir := filepath.Join(dst_posts_dir, postName)
-	if err := lpio.Copy(srcPostDir, dstPostDir, SITE_DST_PERM); err != nil {
-		return nil, err
-	}
 
 	// create the post object
 	p, err := post.FromMarkdown(filepath.Join(srcPostDir, info.Name()+".md"))
 	if err != nil {
+		return nil, err
+	}
+	// copy the rest of the folder
+	dstPostDir := filepath.Join(dst_posts_dir, p.UrlPermalink)
+	if err := lpio.Copy(srcPostDir, dstPostDir, SITE_DST_PERM); err != nil {
 		return nil, err
 	}
 
