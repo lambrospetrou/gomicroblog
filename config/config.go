@@ -8,8 +8,9 @@ import (
 )
 
 type Config struct {
-	StaticPaths   []string `json:"static_paths"`
-	TemplatePaths []string `json:"templates"`
+	StaticPaths    []string `json:"static_paths"`
+	TemplatePaths  []string `json:"templates"`
+	SiteIndexTitle string   `json:"site_index_title"`
 
 	PathConfig string `json:"-"`
 }

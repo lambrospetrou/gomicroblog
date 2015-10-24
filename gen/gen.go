@@ -20,14 +20,13 @@ const (
 
 	POSTS_DIR_SRC = "_posts"
 	POSTS_DIR_DST = "articles"
-
-	SITE_INDEX_TITLE = "All articles | Lambros Petrou"
 )
 
 type SiteBundle struct {
-	SiteDst     string
-	PostsDstDir string
-	Posts       []*post.BPost
+	SiteIndexTitle string
+	SiteDst        string
+	PostsDstDir    string
+	Posts          []*post.BPost
 }
 
 // GenerateHandler is called by the website when we want to execute the generator
@@ -43,7 +42,8 @@ func GenerateSite(dir_site string, confPath string) error {
 		return err
 	}
 
-	bundle := &SiteBundle{SiteDst: dst_dir, PostsDstDir: filepath.Join(dst_dir, POSTS_DIR_DST)}
+	bundle := &SiteBundle{SiteIndexTitle: conf.SiteIndexTitle,
+		SiteDst: dst_dir, PostsDstDir: filepath.Join(dst_dir, POSTS_DIR_DST)}
 	// iterate over the posts directory and compile each post
 	if err := compilePosts(filepath.Join(dir_site, POSTS_DIR_SRC),
 		filepath.Join(dst_dir, POSTS_DIR_DST), viewBuilder, bundle); err != nil {
@@ -195,7 +195,7 @@ func generateIndexHTML(b *SiteBundle, viewBuilder *view.Builder) error {
 	// create the actual HTML file for the post
 	bundle := &view.TemplateBundleIndex{
 		Footer: &view.FooterStruct{Year: time.Now().Year()},
-		Header: &view.HeaderStruct{Title: SITE_INDEX_TITLE},
+		Header: &view.HeaderStruct{Title: b.SiteIndexTitle},
 		Posts:  b.Posts,
 	}
 	return viewBuilder.RenderToPath(filepath.Join(b.SiteDst, "index.html"), view.LAYOUT_INDEX, bundle)
