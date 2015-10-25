@@ -16,8 +16,9 @@ import (
 
 type BPost struct {
 	Title           string        `json:"title"`
+	Description     string        `json:"description"`
 	Author          string        `json:"author"`
-	UrlPermalink    string        `json:"url_permalink"`
+	UrlPermalink    string        `json:"url"`
 	DateCreated     time.Time     `json:"date_created"`
 	DateEdited      time.Time     `json:"date_edited"`
 	ContentMarkdown string        `json:"content_markdown"`
@@ -129,6 +130,9 @@ func parseFrontMatter(bp *BPost, markdown []byte) (int, error) {
 			break
 		case "url":
 			bp.UrlPermalink = strings.Trim(segments[1], " ")
+			break
+		case "description":
+			bp.Description = strings.Trim(segments[1], " ")
 			break
 		case "date-edited":
 			// Ignore invalid dates.

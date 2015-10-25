@@ -11,10 +11,12 @@ import (
 
 type FooterStruct struct {
 	Year int
+	Post *post.BPost
 }
 
 type HeaderStruct struct {
 	Title string
+	Post  *post.BPost
 }
 
 type TemplateBundle struct {

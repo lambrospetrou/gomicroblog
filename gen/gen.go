@@ -183,8 +183,8 @@ func getPostNameFromRaw(info os.FileInfo) string {
 func generatePostHTML(p *post.BPost, postDstPath string, viewBuilder *view.Builder) error {
 	// create the actual HTML file for the post
 	bundle := &view.TemplateBundle{
-		Footer: &view.FooterStruct{Year: time.Now().Year()},
-		Header: &view.HeaderStruct{Title: p.Title},
+		Footer: &view.FooterStruct{Year: time.Now().Year(), Post: p},
+		Header: &view.HeaderStruct{Title: p.Title, Post: p},
 		Post:   p,
 	}
 	return viewBuilder.RenderToPath(postDstPath, view.LAYOUT_POST, bundle)
