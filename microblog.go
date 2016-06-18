@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"path/filepath"
 	"runtime"
@@ -11,7 +10,7 @@ import (
 )
 
 func main() {
-	fmt.Println("Go Microblog service started!")
+	//log.Println("Go Microblog service started!")
 
 	// use all the available cores
 	runtime.GOMAXPROCS(runtime.NumCPU())
@@ -19,10 +18,11 @@ func main() {
 	var dirSite = flag.String("site", "", "specify a directory that contains the site to generate")
 	flag.Parse()
 
-	log.Println("site:", *dirSite)
+	//log.Println("site:", *dirSite)
 	if len(*dirSite) > 0 {
 		err := gen.GenerateSite(*dirSite, filepath.Join(*dirSite, "config.json"))
 		if err != nil {
+			log.Fatalln(err)
 			panic(err)
 		}
 		return

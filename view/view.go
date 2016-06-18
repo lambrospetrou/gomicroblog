@@ -46,14 +46,8 @@ func NewBuilder(layouts_dir string, templatePaths []string) *Builder {
 		templatePaths[i] = filepath.Join(layouts_dir, templatePaths[i])
 	}
 	builder.templates = template.Must(template.ParseFiles(templatePaths...))
-	/*
-		builder.templates = template.Must(template.ParseFiles(
-			filepath.Join(layouts_dir, "partials/header.html"),
-			filepath.Join(layouts_dir, "partials/footer.html"),
-			filepath.Join(layouts_dir, "post.html"),
-			filepath.Join(layouts_dir, "index.html")),
-		)
-	*/
+
+
 	return builder
 }
 
@@ -84,14 +78,3 @@ func (b *Builder) RenderToPath(dst string, vname string, o interface{}) error {
 	return err
 }
 
-/*
-// Render the given view name @vname using the given bundle object @o.
-// It writes the output to the given ResponseWriter.
-func Render(w http.ResponseWriter, vname string, o interface{}) {
-	// now we can call the correct template by the basename filename
-	err := templates.ExecuteTemplate(w, vname+".html", o)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-*/

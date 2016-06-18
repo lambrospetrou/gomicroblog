@@ -65,7 +65,7 @@ func FromJson(b []byte) *BPost {
 	return bp
 }
 
-// FromFile reads a post folder (that follows our special structure) and creates a new
+// FromMarkdown reads a post folder (that follows our special structure) and creates a new
 // post structure with fields filled from the file loaded.
 func FromMarkdown(pathname string) (*BPost, error) {
 	bp := &BPost{}

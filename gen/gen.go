@@ -31,7 +31,7 @@ type SiteBundle struct {
 
 // GenerateHandler is called by the website when we want to execute the generator
 func GenerateSite(dir_site string, confPath string) error {
-	fmt.Fprintln(os.Stdout, "dir:", dir_site)
+	//fmt.Fprintln(os.Stdout, "dir:", dir_site)
 
 	conf := config.FromConfiguration(confPath)
 	viewBuilder := view.NewBuilder(filepath.Join(dir_site, "_layouts"), conf.TemplatePaths)
@@ -57,7 +57,7 @@ func GenerateSite(dir_site string, confPath string) error {
 
 	// copy all the static paths
 	for _, path := range conf.StaticPaths {
-		fmt.Println("path", path)
+		//fmt.Println("path", path)
 		if err := lpio.Copy(path, filepath.Join(dst_dir, filepath.Base(path)), SITE_DST_PERM); err != nil {
 			return err
 		}
@@ -105,8 +105,8 @@ func compilePosts(src_posts_dir string, dst_posts_dir string, viewBuilder *view.
 	allPosts := make([]*post.BPost, 0, 10)
 	// iterate over all the posts
 	for _, cpost := range files {
-		fmt.Println("== Compiling article-post ==")
-		fmt.Println(cpost.Name(), cpost.IsDir(), cpost.ModTime())
+		//fmt.Println("== Compiling article-post ==")
+		//fmt.Println(cpost.Name(), cpost.IsDir(), cpost.ModTime())
 		var p *post.BPost
 		var err error
 		if cpost.IsDir() {
