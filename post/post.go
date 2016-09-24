@@ -5,13 +5,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/russross/blackfriday"
 	"html/template"
 	"io/ioutil"
 	"log"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/russross/blackfriday"
 )
 
 type BPost struct {
@@ -123,7 +124,7 @@ func parseFrontMatter(bp *BPost, markdown []byte) (int, error) {
 			// no front-matter is defined - should start from the first line
 			return 0, nil
 		}
-		segments := strings.Split(line, ":")
+		segments := strings.SplitN(line, ":", 2)
 		switch segments[0] {
 		case "title":
 			bp.Title = strings.Trim(segments[1], " ")
