@@ -11,8 +11,6 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/russross/blackfriday"
 )
 
 type BPost struct {
@@ -92,7 +90,7 @@ func FromMarkdown(pathname string) (*BPost, error) {
 
 	remBytes := markdown[bytesRead:]
 	bp.ContentMarkdown = string(remBytes)
-	bp.ContentHtml = template.HTML(string(blackfriday.MarkdownCommon(remBytes)))
+	bp.ContentHtml = template.HTML(string(compileMarkdownToHTML(remBytes)))
 
 	return bp, nil
 }
